@@ -1,7 +1,7 @@
 (function (_) {
 	'use strict';
 
-	var app = angular.module('mySmartMirror', ['ngGrid', 'mySmartMirrorPlugins', 'ui.router']);
+	var app = angular.module('mySmartMirror', ['ngGrid', 'ngPlugins', 'ui.router']);
 
     app.constant('APPLICATION',{name:'mySmartMirror',version:'0.0.1'});
     app.constant('_',_);

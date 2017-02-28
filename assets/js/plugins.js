@@ -1,7 +1,7 @@
 (function (angular,_,head) {
 	'use strict';
 
-    var plugins = angular.module('mySmartMirrorPlugins', []);
+    var plugins = angular.module('ngPlugins', []);
     plugins.constant('PluginState',{CREATED:0,INSTANCIED:1,INIT:2,PAUSED:3,RUNNING:4})
     plugins.constant('PluginsType',{DATASOURCE:0,WIDGET:1,INPUT:2,OUTPUT:3})
     plugins.constant('_',_);
