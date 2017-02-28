@@ -1,0 +1,9 @@
+<!--
+<ui-dashboard>
+   
+</dashboard>-->
+<div class="container"  >
+    <ul gridster="{ draggable: { enabled: true } }" gridster-changed="updated(serialized)">
+        <li gridster-repeat="widget in widgets" layout="layout[$index]">{{ widget.title }}</li>
+    </ul>
+<div>
