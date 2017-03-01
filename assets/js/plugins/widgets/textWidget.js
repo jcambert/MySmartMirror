@@ -1,7 +1,7 @@
 (function (angular,_) {
 	'use strict';
 
-    var widget = angular.module('mySmartMirrorPlugins');
+    var widget = angular.module('ngPlugins');
 
     widget.directive('widgetText',['$log',function($log){
         return{

@@ -19,7 +19,7 @@
         }
     };
 
-	var pluginTimer = angular.module('mySmartMirrorPlugins');	
+	var pluginTimer = angular.module('ngPlugins');	
 
 /*	pluginTimer.config(['pluginsProvider','PluginsType', function(plugins,PluginsType){
 		plugins.add(clock, PluginsType.DATASOURCE);

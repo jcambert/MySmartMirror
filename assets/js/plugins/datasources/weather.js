@@ -1,7 +1,7 @@
 (function (angular,_) {
 	'use strict';
 
-	var pluginWeather = angular.module('mySmartMirrorPlugins');	
+	var pluginWeather = angular.module('ngPlugins');	
 
 
 	pluginWeather.run(['$log','plugins','PluginsType',function($log,plugins,PluginsType){
