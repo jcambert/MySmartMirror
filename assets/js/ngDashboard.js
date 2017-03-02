@@ -1,11 +1,11 @@
 (function (angular,_) {
 	'use strict';
     
-    var dash = angular.module('ngDashboard',['gridster', 'ngPlugins','ui.bootstrap']);
+    var dash = angular.module('ngDashboard',['gridster', 'ngPlugins','ngFa','ui.bootstrap']);
     
     dash.constant('FormState',{ADD:0,MODIFY:1});
 
-    dash.directive('dashboardUi',['$log','dashboards','FormState', function($log,dashboards,FormState){
+    dash.directive('dashboardUi',['$log','dashboards','FormState','plugins','PluginsType','Plugin', function($log,dashboards,FormState,plugins,PluginsType,Plugin){
         return{
             restrict:'E',
             replace:true,
@@ -27,18 +27,41 @@
                 };
                 
                 $scope.dashboard = undefined;
+                $scope.dashboards = dashboards._dashboards;
                 $scope.page = undefined;
                 $scope.selectedDashboardId=-1;
                 $scope.selectedPageId=-1;
 
-                $scope.$watch('selectedDashboardId',function(newValue,oldValue){
-                    $scope.dashboard=dashboards.getDashboard(newValue);
-                    $scope.page = $scope.dashboard.firstPage();
-                });
-
                 $scope.$watch('selectedPageId',function(newValue,oldValue){
-                    $scope.page=$scope.dashboard.getPage(newValue);
-                });
+                    $scope.selectPage(newValue);
+                },true);
+
+                $scope.$watch('selectedDashboardId',function(newValue,oldValue){
+                    $scope.selectDashboard(newValue);
+                },true);
+
+                $scope.resetPage = function(){
+                    $scope.page=undefined;
+                    $scope.selectedPageId=-1;
+                    $scope.selectedPageId=0;
+                }
+                $scope.selectPage = function(id){
+                    if(id==-1)return;
+                    $log.log('Try to change page to ',id);
+                    if(!angular.isDefined($scope.dashboard))return;
+                    $scope.page=$scope.dashboard.getPage(id);
+                    if(!angular.isDefined($scope.page))return;
+                    $log.log('Current Page is ',$scope.page.name);
+                }
+
+                $scope.selectDashboard = function(id){
+                    $log.log('Try to change dashboard to ',id);
+                    $scope.dashboard=dashboards.getDashboard(id);
+                    if(!angular.isDefined($scope.dashboard))return;
+                    $scope.resetPage();
+                    $scope.selectPage($scope.selectedPageId);
+                    $log.log('Current Dashboard is ',$scope.dashboard.name);
+                }
 
                 $scope.addDashboard = function(){
                     var modalInstance = $uibModal.open({
@@ -55,8 +78,10 @@
                             }
                         });
                      modalInstance.result.then(function (result) {
-                            $scope.dashboard = dashboards.addDashboard(result.dashboard.name);
-                            
+                            $log.log('Dashboard Index before Adding',$scope.selectedDashboardId);
+                            $scope.selectedDashboardId= dashboards.getIndex( dashboards.addDashboard(result.dashboard.name) );
+                            $scope.selectPage($scope.selectedPageId);
+                            $log.log('Dashboard Index after Added',$scope.selectedDashboardId);
                         }, function () {
                             $log.info('New Dashboard Modal dismissed at: ' + new Date());
                         });
@@ -68,6 +93,18 @@
                     $scope.page = $scope.dashboard.firstPage();
                     return true;
                 };
+
+                $scope.changeDashboard = function(d){
+                  //  $scope.dashboard=d;
+                    $log.log('Dashbord change to',d);
+                    $scope.selectedDashboardId=d;
+                }
+
+                 $scope.changePage = function(d){
+                  //  $scope.dashboard=d;
+                    $log.log('Page change to',d);
+                    $scope.selectedPageId=d;
+                }
 
                 $scope.addPage = function(){
                     if(!angular.isDefined($scope.dashboard))return false;
@@ -86,7 +123,9 @@
                             }
                         });
                      modalInstance.result.then(function (result) {
-                            $scope.dashboard.addPage(result.page.name);
+                            $scope.selectedPageId=$scope.dashboard.getPageIndex( $scope.dashboard.addPage(result.page.name));
+                            $scope.selectPage($scope.selectedPageId);
+                            $log.log('new selected page id after adding',$scope.selectedPageId);
                         }, function () {
                             $log.info('New Page Modal dismissed at: ' + new Date());
                         });
@@ -98,7 +137,18 @@
                     $scope.page = $scope.dashboard.firstPage();
                     return true;
                 }
-            }]
+
+               $scope.addWidget = function(){
+                   var c=plugins.get('clock', PluginsType.DATASOURCE); $log.log('plugin clock:',c);
+                   var cinst=new Plugin({refresh:1},c,PluginsType.DATASOURCE);
+
+                   var t=plugins.get('textWidget',PluginsType.WIDGET);
+                   var tinst=new Plugin({title:'Heure',ngModel:'',datasource:cinst,field:'time_string_value'},t,PluginsType.WIDGET)
+                    $scope.page.addWidget(tinst);
+                }
+            }],
+            link:function($scope,$element,attrs){
+            }
         }
     }]);
 
@@ -106,6 +156,7 @@
         var self=$scope;
         self.mode=options.mode;
         self.dashboard=(self.mode == FormState.ADD?{}:options.dashboard);
+        self.dashboard.name="jcambert";
         self.ok = function () {
             $uibModalInstance.close({dashboard:self.dashboard});
         };
@@ -129,49 +180,60 @@
         };
     }]);
 
-    dash.directive('widget',[function(){
+    dash.directive('widget',['$compile', function($compile){
         return {
             restrict:'E',
             replace:true,
-            transclude:true,
-            template:'<div class="box" ng-controller="CustomWidgetCtrl">\
+            template:'<div class="box" >\
                         <div class="box-header">\
                             <h3>{{ widget.name }}</h3>\
                             <div class="box-header-btns pull-right">\
-                                <a title="settings" ng-click="openSettings(widget)"><i class="glyphicon glyphicon-cog"></i></a>\
-                                <a title="Remove widget" ng-click="remove(widget)"><i class="glyphicon glyphicon-trash"></i></a>\
+                                <a title="settings" ng-click="openSettings(widget)"><fa icon="cog" animation="spin" parent="true"></fa></a>\
+                                <a title="Remove widget" ng-click="remove(widget)"><fa icon="trash" animation="tada" parent="true"></fa></a>\
                             </div>\
                         </div>\
-                        <div class="box-content" ng-transclude>toto</div>\
-                    </div>'
+                        <div class="box-content" ></div>\
+                    </div>',
+            scope:{
+                content:'='
+            },
+            link:function($scope,$element,attrs){
+                angular.element($element).find('.box-content').append($scope.content);
+                $compile($element)($scope);
+            }
         }
     }]);
 
-    dash.service('dashboards',['Dashboard', function(Dashboard){
+    dash.service('dashboards',['$log', 'Dashboard', function($log,Dashboard){
         var self=this;
         self._dashboards=[];
 
-        function _getIndex(nameOrId){
-            if(_.isInteger(nameOrId))return nameOrId;
-            return _.findIndex(this._dashboards,function(dashboard){return dashboard.name===nameOrId;});
+        self.getIndex = function(nameOrIdOrObject){
+            if(_.isInteger(nameOrIdOrObject))return nameOrIdOrObject;
+            if(_.isObject(nameOrIdOrObject))return _.findIndex(self._dashboards,function(dashboard){return dashboard.name===nameOrIdOrObject.name;});
+            return _.findIndex(self._dashboards,function(dashboard){return dashboard.name===nameOrIdOrObject;});
         }
 
         
-
+        self.count = function(){
+            return self._dashboards.length;
+        };
         self.addDashboard = function(name){
             if(!angular.isDefined(name))return undefined;
 
-            var dashboard= _.find(self.dashboard,function(dashboard){return dashboard.name===name;});
+            var dashboard= _.find(self._dashboards,function(dashboard){return dashboard.name===name;});
             if(!angular.isDefined(dashboard)){
                 dashboard=new Dashboard(name);
-                self.dashboards.push(dashboard);
+                self._dashboards.push(dashboard);
+                dashboard.id=self.getIndex(name);
+                $log.log(dashboard);
             }
             return dashboard;
             
         };
         self.removeDashboard = function(nameOrIndex){
             if(!angular.isDefined(nameOrIndex))return false;
-            var idx= _getIndex(nameOrIndex);
+            var idx= self.getIndex(nameOrIndex);
             self._dashboards.splice(idx,1);
             return true;
         };
@@ -183,21 +245,23 @@
         
     }]);
 
-    dash.factory('Dashboard',['$log',function($log){
-        var self=this;
-        self._pages=[];
+    dash.factory('Dashboard',['$log','Page',function($log,Page){
+        
         function Dashboard(name){
             $log.log('Create new Dashboard :',name);
-            self.name=name;
+            this.name=name;
+            this.pages=[];
         }
 
         Dashboard.prototype={
+            
             addPage:function(name){
                 if(!angular.isDefined(name))return false;
-                var page=self._pages[this.getIndex(name)];
+                var page=this.pages[this.getPageIndex(name)];
                 if(!angular.isDefined(page)){
                     page=new Page(name);
-                    self._pages.push(page);
+                    this.pages.push(page);
+                    page.id= this.pages.indexOf(page);
                 }
 
                 return page;
@@ -207,42 +271,45 @@
                 page=_.toInteger(page)
                 return page>=0?page:0;
             },
-            getIndex:function(nameOrId){
+            getPageIndex:function(nameOrId){
+                $log.log('try get page index',nameOrId);
                 if(_.isInteger(nameOrId))return _.toInteger(nameOrId);
-                return _.findIndex(this._pages,function(page){return page.name===nameOrId;});
+                if(_.isObject(nameOrId))return _.findIndex(this.pages,function(page){return page.name===nameOrId.name;});
+                return _.findIndex(this.pages,function(page){return page.name===nameOrId;});
             },
             
             getPage:function(nameOrId){
-                return this._pages[this.getIndex(nameOrId)];
+                if(this.pages.length==0)return undefined;
+                return this.pages[this.getPageIndex(nameOrId)];
             },
             firstPage:function(){
                 return this.getPage(0);; 
             },
             lastPage:function(){
-                return this.getPages(this._pages.length);
+                return this.getPages(this.pages.length);
             },
             hasNextPage:function(nameOrId){
-                return (this.getIndex(name)+1)<this._pages.count;
+                return (this.getPageIndex(name)+1)<this.pages.count;
             },
             getNextPage:function(nameOrId){
                 if(!this.hasNextPage(nameOrId))return this.getPage(nameOrId);
-                return this._pages[this.getIndex(name)+1];
+                return this.pages[this.getPageIndex(name)+1];
             },
             hasPreviousPage:function(nameOrId){
-                return (this.getIndex(name)-1)>=0
+                return (this.getPageIndex(name)-1)>=0
             },
             getPreviousPage:function(nameOrId){
                 if(!this.hasPreviousPage(nameOrId))return this.getPage(nameOrId);
-                return this._pages[this.getIndex(name)-1];
+                return this.pages[this.getPageIndex(name)-1];
             },
             getPages:function(){
-                return self._pages;
+                return self.pages;
             },
             removePage:function(nameOrId){
-                this._pages.splice(this.getIndex(nameOrId),1);
+                this.pages.splice(this.getPageIndex(nameOrId),1);
             },
             clear:function(){
-                self._pages=[];
+                self.pages=[];
             },
             serialize:function(){
 
@@ -261,21 +328,37 @@
             }
         };
 
-        return Dashboard();
+        return Dashboard;
     }]);
     
     dash.factory('Page',['$log',function($log){
-        var self=this;
-        self._widgets=[];
+
         function Page(name){
-            $log.log('Create new Dashboard :',name);
-            self.name=name;
-            
+            $log.log('Create new Page :',name);
+            this.name=name;
+            this.widgets=[];
         }
         Page.prototype={
-
+            addWidget:function(widget){
+                this.widgets.push(widget);
+            },
+            
         }
         return Page;
     }]);
 
+    dash.filter('object2Array', [function() {
+        return function(input) {
+        if (Object.prototype.toString.call(input) === '[object Array]') {
+            return input;
+        }
+
+        var out = [];
+        for(var i in input){
+            out.push(input[i]);
+        }
+
+        return out;
+        };
+  }])
 }(angular,_))
