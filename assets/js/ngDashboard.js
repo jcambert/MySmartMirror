@@ -1,7 +1,7 @@
 (function (angular,_) {
 	'use strict';
     
-    var dash = angular.module('ngDashboard',['gridster', 'ngPlugins','ngFa','ui.bootstrap']);
+    var dash = angular.module('ngDashboard',['gridster', 'ngPlugins','ngFa','ngTool','ui.bootstrap']);
     
     dash.constant('FormState',{ADD:0,MODIFY:1});
 
@@ -143,7 +143,7 @@
                    var cinst=new Plugin({refresh:1},c,PluginsType.DATASOURCE);
 
                    var t=plugins.get('textWidget',PluginsType.WIDGET);
-                   var tinst=new Plugin({title:'Heure',ngModel:'',datasource:cinst,field:'time_string_value'},t,PluginsType.WIDGET)
+                   var tinst=new Plugin({title:'',ngModel:'',datasource:cinst,field:'time_string_value'},t,PluginsType.WIDGET)
                     $scope.page.addWidget(tinst);
                 }
             }],
@@ -185,7 +185,7 @@
             restrict:'E',
             replace:true,
             template:'<div class="box" >\
-                        <div class="box-header">\
+                        <div class="box-header" ng-show="$root.settings">\
                             <h3>{{ widget.name }}</h3>\
                             <div class="box-header-btns pull-right">\
                                 <a title="settings" ng-click="openSettings(widget)"><fa icon="cog" animation="spin" parent="true"></fa></a>\

@@ -54,7 +54,8 @@
     
     
 
-    app.run(['$log',function($log){
+    app.run(['$log','$rootScope',function($log,$rootScope){
+        $rootScope.settings=false;
         $log.log('MySmartMirror running');
     }]);
 		

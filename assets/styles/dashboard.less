@@ -10,13 +10,16 @@ ul {
 }
 .box {
     height: 100%;
-    border: 1px solid #ccc;
-    background-color: #fff;
+  //  border: 1px solid #B7B7A4;
+    background-color: @background;
+    &:hover{
+        border: 1px solid #ccc;
+    }
 }
 .box-header {
-    background-color: #eee;
+    background-color: #6B7277;
     padding: 0 30px 0 10px;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid #B7B7A4;
     cursor: move;
     position: relative;
 }
@@ -27,6 +30,9 @@ ul {
 .box-content {
     padding: 10px;
 }
+
+
+
 .box-header-btns {
     top: 0px;
     right: 10px;
@@ -34,11 +40,34 @@ ul {
     position: absolute;
 }
 a {
-    color: #ccc;
+    color: #B7B7A4;
 }
 form {
     margin-bottom: 0;
 }
-.gridster {
-    border: 1px solid #ccc;
+
+.full{
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+}
+
+.container-full {
+  position:fixed;
+  margin: 0 auto;
+  width: 100%;
+  height:100%;
+  background: @background;
+  color:@color;
+  top:0px;
+  left:0;
+  z-index: 0;
+
+}
+
+.gridster-container{
+    padding-left: 30px;
+    padding-right: 30px;
+    padding-top: 20px;
+    padding-bottom: 20px;
 }

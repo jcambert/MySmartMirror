@@ -13,7 +13,7 @@
                 ngModel:'='
             },*/
 
-            template:'<div class="widget flex-item"><div class="widget-header" ng-if="title" ng-bind="title"></div><div class="widget-content" ng-bind="ngModel"></div></div>',
+            template:'<div class="widget flex-item"><div class="widget-header" ng-if="title" ng-bind="title"></div><div class="widget-content text-widget-content" ng-bind="ngModel"></div></div>',
            // template:'<div class="widget">toto</div>',
             link:function($scope,$elt,attrs){
               if(angular.isDefined($scope.datasource)){
