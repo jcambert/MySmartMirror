@@ -3,22 +3,26 @@
 
     var widget = angular.module('ngPlugins');
 
-    widget.directive('widgetText',['$log',function($log){
+    widget.directive('widgetChart',['$log',function($log){
         return{
             restrict:'E',
             replace:true,
             transclude:false,
 
-            template:'<div class="widget flex-item"><div class="widget-header" ng-if="subtitle" ng-bind="subtitle"></div><div class="widget-content text-widget-content" ng-bind="ngModel"></div></div>',
+            template:'<div class="widget">\
+                        <div class="widget-header" ng-if="subtitle" ng-bind="subtitle"></div>\
+                        <canvas id="line" class="chart chart-line" chart-data="data"\
+                            chart-labels="labels" chart-series="series" chart-options="options"\
+                            chart-dataset-override="datasetOverride" chart-click="onClick">\
+                        </canvas</div>',
             link:function($scope,$elt,attrs){
               if(angular.isDefined($scope.datasource)){
                 $scope.$watch('datasource.latestData',function(newData){
-                   // $log.log('Datasource changed',newData);
-                   if(angular.isDefined($scope.datasource.latestData))
-                        if(angular.isDefined($scope.field) )
-                            $scope.ngModel=$scope.datasource.latestData[$scope.field];
-                        else
-                            $scope.ngModel=$scope.datasource.latestData;
+
+                   if(angular.isDefined($scope.datasource.latestData)){
+                       
+                   }
+                        
                 });
                 
                 $scope.datasource.start();
@@ -80,15 +84,7 @@
                 settings.datasource.updateNow();
                 $log.log('Text Widget Datasource updated');
             }
-            //var elt=angular.element('<widget-text></widget-text>');
-           // var elt=angular.element('<div class="widget">{{title}}</div>');
-           // settings.$scope.title='TEST';
-           // elt.attr('title','WidgetTitle');
-           // elt.attr('ng-model',settings.value);
-         /*   var compiled=$compile('<div class="widget">toto</div>')(settings.$scope);
-            $log.log(compiled.html());
-            return $sce.trustAsHtml( compiled.html());
-            return settings.value;*/
+
         };
        
     }

@@ -6,7 +6,9 @@
     app.constant('APPLICATION',{name:'mySmartMirror',version:'0.0.1'});
     app.constant('_',_);
 
-    app.config(['$stateProvider','$urlRouterProvider',function($stateProvider, $urlRouterProvider){
+    app.config(['$stateProvider','$urlRouterProvider','$sceDelegateProvider',function($stateProvider, $urlRouterProvider,$sceDelegateProvider){
+        
+        $sceDelegateProvider.resourceUrlWhitelist(['**']);
         $stateProvider
         .state('home', {
             url: '/',

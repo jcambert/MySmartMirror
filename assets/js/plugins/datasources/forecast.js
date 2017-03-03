@@ -11,8 +11,8 @@
 
 
 	var weather={
-		name: "openweathermap-weather",
-        display: "Open Weather Map API",
+		name: "openweathermap-forecast",
+        display: "Open Weather Map Forecast API",
         settings: [{
             name: "api_key",
             display_name: "API Key",
@@ -74,31 +74,31 @@
                 startCallback();
         }
 
+        //@see http://jtblin.github.io/angular-chart.js/#top
         this.updateNow = function() {
-            $log.log('Weather start update');
-            var url="http://api.openweathermap.org/data/2.5/weather?APPID=" + self.currentSettings.api_key + "&q=" + encodeURIComponent(self.currentSettings.location) + "&units=" + self.currentSettings.units;
+            $log.log('Weather Forecast start update');
+            var url="http://api.openweathermap.org/data/2.5/forecast?APPID=" + self.currentSettings.api_key + "&q=" + encodeURIComponent(self.currentSettings.location) + "&units=" + self.currentSettings.units;
             $http.jsonp(url)
             .then(function(result, status, headers, config){
                 var data=result.data;
-                 $log.log('Weather:',data);
+                $log.log('Forecast:',data);
+                var labels=[];
+                var datas={series:[],data:[]}
+                _.forEach(data.list,function(step){
+                    labels.push(moment.unix(step.dt).format('HH:mm'));
+                })
                 var newData = {
-                        place_name: data.name,
-                        sunrise: moment.unix(data.sys.sunrise).format("HH:mm:ss"),
-                        sunset: moment.unix(data.sys.sunset ).format("HH:mm:ss"),
-                        conditions: toTitleCase(data.weather[0].description),
-                        current_temp: data.main.temp,
-                        high_temp: data.main.temp_max,
-                        low_temp: data.main.temp_min,
-                        pressure: data.main.pressure,
-                        humidity: data.main.humidity,
-                        wind_speed: data.wind.speed,
-                        wind_direction: data.wind.deg
+                        place_name: data.city.name,
+                        labels:labels,
+                        datas:datas,
+                        list:data.list
                     };
-                    //$log.log(newData);
+                    $log.log(newData);
                     updateCallback(newData);
             },function(data, status, headers, config){
                 $log.log(status);
             });
+
         }
 
         this.onDispose = function() {

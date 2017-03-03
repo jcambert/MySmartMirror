@@ -30,7 +30,7 @@
             link:function($scope,$element,attrs){
                 
                 var e=angular.element($element);
-                console.dir(e);
+               
                 if($scope.dom){
                     e.addClass('animated')
                 }else if($scope.hover){

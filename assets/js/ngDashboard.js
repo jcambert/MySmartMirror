@@ -18,12 +18,13 @@
                     pushing: true,
                     floating: true,
                     draggable: {
-                        enabled: false
+                        enabled: true
                     },
                     resizable: {
-                        enabled: false,
+                        enabled: true,
                         handles: ['n', 'e', 's', 'w', 'se', 'sw']
-                    }
+                    },
+                    rowHeight:'125',
                 };
                 
                 $scope.dashboard = undefined;
@@ -58,6 +59,7 @@
                     $log.log('Try to change dashboard to ',id);
                     $scope.dashboard=dashboards.getDashboard(id);
                     if(!angular.isDefined($scope.dashboard))return;
+                   // angular.extend($scope.gridsterOpts,$scope.dashboard.gridSettings);
                     $scope.resetPage();
                     $scope.selectPage($scope.selectedPageId);
                     $log.log('Current Dashboard is ',$scope.dashboard.name);
@@ -78,14 +80,18 @@
                             }
                         });
                      modalInstance.result.then(function (result) {
-                            $log.log('Dashboard Index before Adding',$scope.selectedDashboardId);
-                            $scope.selectedDashboardId= dashboards.getIndex( dashboards.addDashboard(result.dashboard.name) );
-                            $scope.selectPage($scope.selectedPageId);
-                            $log.log('Dashboard Index after Added',$scope.selectedDashboardId);
+                            _addDashboard(result.dashboard.name);
                         }, function () {
                             $log.info('New Dashboard Modal dismissed at: ' + new Date());
                         });
                 };
+                function _addDashboard(name){
+                    $log.log('Dashboard Index before Adding',$scope.selectedDashboardId);
+                    $scope.selectedDashboardId= dashboards.getIndex( dashboards.addDashboard(name) );
+                    $scope.selectDashboard($scope.selectedDashboardId);
+                    $scope.selectPage($scope.selectedPageId);
+                    $log.log('Dashboard Index after Added',$scope.selectedDashboardId);
+                }
 
                 $scope.removeDashboard = function(nameOrIndex){
                     if(!dashboards.removeDashboard(nameOrIndex))return false;
@@ -123,13 +129,16 @@
                             }
                         });
                      modalInstance.result.then(function (result) {
-                            $scope.selectedPageId=$scope.dashboard.getPageIndex( $scope.dashboard.addPage(result.page.name));
-                            $scope.selectPage($scope.selectedPageId);
-                            $log.log('new selected page id after adding',$scope.selectedPageId);
+                            _addPage(result.page.name);
                         }, function () {
                             $log.info('New Page Modal dismissed at: ' + new Date());
                         });
                 };
+                function _addPage(name){
+                    $scope.selectedPageId=$scope.dashboard.getPageIndex( $scope.dashboard.addPage(name));
+                    $scope.selectPage($scope.selectedPageId);
+                    $log.log('new selected page id after adding',$scope.selectedPageId);
+                }
 
                 $scope.removePage = function(nameOrIndex){
                     if(!angular.isDefined($scope.dashboard))return false;
@@ -143,9 +152,27 @@
                    var cinst=new Plugin({refresh:1},c,PluginsType.DATASOURCE);
 
                    var t=plugins.get('textWidget',PluginsType.WIDGET);
-                   var tinst=new Plugin({title:'',ngModel:'',datasource:cinst,field:'time_string_value'},t,PluginsType.WIDGET)
+                   var tinst=new Plugin({title:'Heure',ngModel:'',datasource:cinst,field:'time_string_value'},t,PluginsType.WIDGET)
                     $scope.page.addWidget(tinst);
+
+                    var w=plugins.get('openweathermap-weather', PluginsType.DATASOURCE); $log.log('plugin openweathermap:',w);
+                    var winst=new Plugin({api_key:'d288da12b207992dd796241cf56014b1',location:'delle 90100',units:'metric',refresh:30*1000},w,PluginsType.DATASOURCE);
+
+                     var t1=plugins.get('textWidget',PluginsType.WIDGET);
+                    var t1inst=new Plugin({title:'Temps',ngModel:'',datasource:winst,field:'current_temp'},t1,PluginsType.WIDGET)
+                    $scope.page.addWidget(t1inst);
+
+                    var w1=plugins.get('openweathermap-forecast', PluginsType.DATASOURCE); $log.log('plugin openweathermap:',w1);
+                    var w1inst=new Plugin({api_key:'d288da12b207992dd796241cf56014b1',location:'delle 90100',units:'metric',refresh:30*1000},w1,PluginsType.DATASOURCE);
+
+                     var t2=plugins.get('textWidget',PluginsType.WIDGET);
+                    var t2inst=new Plugin({title:'Prévisions',ngModel:'',datasource:w1inst,field:'labels'},t2,PluginsType.WIDGET)
+                    $scope.page.addWidget(t2inst);
                 }
+
+                _addDashboard('jcambert');
+                _addPage('main');
+                $scope.addWidget();
             }],
             link:function($scope,$element,attrs){
             }
@@ -171,6 +198,7 @@
         self.mode=options.mode;
         self.dashboard=options.dashboard;
         self.page=(self.mode == FormState.ADD?{}:options.page);
+        self.page.name='main';
         self.ok = function () {
             $uibModalInstance.close({dashboard:self.dashboard,page:self.page});
         };
@@ -186,18 +214,27 @@
             replace:true,
             template:'<div class="box" >\
                         <div class="box-header" ng-show="$root.settings">\
-                            <h3>{{ widget.name }}</h3>\
+                            <h4 ng-bind="title"></h4>\
                             <div class="box-header-btns pull-right">\
-                                <a title="settings" ng-click="openSettings(widget)"><fa icon="cog" animation="spin" parent="true"></fa></a>\
-                                <a title="Remove widget" ng-click="remove(widget)"><fa icon="trash" animation="tada" parent="true"></fa></a>\
+                                <a title="settings" ng-click="updateNow()"><fa icon="refresh" animation="tada" parent="true"></fa></a>\
+                                <a title="settings" ng-click="openSettings()"><fa icon="cog" animation="spin" parent="true"></fa></a>\
+                                <a title="Remove widget" ng-click="remove()"><fa icon="trash" animation="tada" parent="true"></fa></a>\
                             </div>\
                         </div>\
                         <div class="box-content" ></div>\
                     </div>',
             scope:{
-                content:'='
+                widget:'=target'
             },
             link:function($scope,$element,attrs){
+                $scope.content=$scope.widget.initializationData;
+                $scope.title=$scope.widget.title;
+
+                $scope.updateNow = function(){
+                    console.dir($scope.widget);
+                    $scope.widget.instance.updateNow();
+                }
+
                 angular.element($element).find('.box-content').append($scope.content);
                 $compile($element)($scope);
             }
@@ -251,6 +288,19 @@
             $log.log('Create new Dashboard :',name);
             this.name=name;
             this.pages=[];
+           /* this.gridSettings={
+                    margins: [20, 20],
+                    outerMargin: false,
+                    pushing: true,
+                    floating: true,
+                    draggable: {
+                        enabled: false
+                    },
+                    resizable: {
+                        enabled: false,
+                        handles: ['n', 'e', 's', 'w', 'se', 'sw']
+                    }
+            };*/
         }
 
         Dashboard.prototype={

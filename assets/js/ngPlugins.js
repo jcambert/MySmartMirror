@@ -1,5 +1,21 @@
-(function (angular,_,head) {
+(function (angular,_,head,moment) {
 	'use strict';
+
+
+    function uuid () {
+        var d = _.now();
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = (d + _.random(16)) % 16 | 0;
+            d = Math.floor(d / 16);
+            return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+    };
+    function isUuid (uuid) {
+        var re = /^([a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}?)$/i;
+        return re.test(uuid);
+    };
+
+
 
     var plugins = angular.module('ngPlugins', []);
     plugins.constant('PluginState',{CREATED:0,INSTANCIED:1,INIT:2,PAUSED:3,RUNNING:4})
@@ -43,7 +59,8 @@
             self.settings = {};
             self.type = undefined;
             self.pluginType=pluginType;
-            
+            self.id=uuid();
+
             function setType(type){
                 $log.log('try to set type to:'+type);
                 if(type == undefined)return;
@@ -102,7 +119,7 @@
                 var now = new Date();
                 self.last_updated=now.toLocaleTimeString();
                 //$log.log('self.settings',self.settings);
-                $log.log('updateCallback of '+self.type.name,newData);
+                //$log.log('updateCallback of '+self.type.name,newData);
                 $rootScope.$broadcast('DATASOURCE.'+self.type.name.toUpperCase(),{object:self,data:newData});
                // self.stop();
             };
@@ -118,6 +135,7 @@
                  if(_.isFunction(self.instance.init)){
                     $log.log(self.type.name+ ' initialization');
                     self.initializationData=self.instance.init();
+                    self.title=settings.title ||'';
                     self.settings.state = PluginState.INIT;
                     $log.log(self.type.name+ ' was initialized');
                  }
@@ -202,4 +220,4 @@
         $log.log('Plugins Mechanism is running');
 
     }]);
-})(angular,_,head);
+})(angular,_,head,moment);

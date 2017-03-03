@@ -12,10 +12,10 @@
         <select class="form-control" style="width: 150px; margin-bottom: 20px; display:inline-block;" ng-if="dashboard.pages.length>1" ng-change="changePage(selectedPageId)" ng-model="selectedPageId" ng-options="d.id as d.name for d in dashboard.pages | orderBy:'name' track by d.id"></select>
     </div>
     <div class="gridster-container">
-        <div gridster="gridsterOptions" ng-if="page.widgets">
+        <div gridster="gridsterOpts" ng-if="page.widgets">
             <ul>
-                <li gridster-item="widget" ng-repeat="widget in page.widgets">
-                    <widget content="widget.initializationData"></widget>
+                <li gridster-item="widget" ng-repeat="widget in page.widgets track by widget.id">
+                    <widget  target="widget"></widget>
                 </li>
             </ul>
         </div>
