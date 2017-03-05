@@ -1,7 +1,7 @@
 (function (angular,_) {
 	'use strict';
     
-    var dash = angular.module('ngDashboard',['gridster', 'ngPlugins','ngFa','ngTool','ui.bootstrap']);
+    var dash = angular.module('ngDashboard',['gridster', 'ngPlugins','ngFa','ngTool','ui.bootstrap','chart.js']);
     
     dash.constant('FormState',{ADD:0,MODIFY:1});
 
@@ -155,19 +155,30 @@
                    var tinst=new Plugin({title:'Heure',ngModel:'',datasource:cinst,field:'time_string_value'},t,PluginsType.WIDGET)
                     $scope.page.addWidget(tinst);
 
-                    var w=plugins.get('openweathermap-weather', PluginsType.DATASOURCE); $log.log('plugin openweathermap:',w);
-                    var winst=new Plugin({api_key:'d288da12b207992dd796241cf56014b1',location:'delle 90100',units:'metric',refresh:30*1000},w,PluginsType.DATASOURCE);
+                   var w=plugins.get('openweathermap-weather', PluginsType.DATASOURCE); $log.log('plugin openweathermap:',w);
+                    var winst=new Plugin({api_key:'b1b15e88fa797225412429c1c50c122a1',location:'delle 90100'},w,PluginsType.DATASOURCE);
 
                      var t1=plugins.get('textWidget',PluginsType.WIDGET);
                     var t1inst=new Plugin({title:'Temps',ngModel:'',datasource:winst,field:'current_temp'},t1,PluginsType.WIDGET)
                     $scope.page.addWidget(t1inst);
 
                     var w1=plugins.get('openweathermap-forecast', PluginsType.DATASOURCE); $log.log('plugin openweathermap:',w1);
-                    var w1inst=new Plugin({api_key:'d288da12b207992dd796241cf56014b1',location:'delle 90100',units:'metric',refresh:30*1000},w1,PluginsType.DATASOURCE);
+                    //var w1inst=new Plugin({api_key:'d288da12b207992dd796241cf56014b1',location:'delle 90100'},w1,PluginsType.DATASOURCE);
+                    var w1inst=new Plugin({api_key:'b1b15e88fa797225412429c1c50c122a1',location:'delle 90100'},w1,PluginsType.DATASOURCE);
 
-                     var t2=plugins.get('textWidget',PluginsType.WIDGET);
-                    var t2inst=new Plugin({title:'Prévisions',ngModel:'',datasource:w1inst,field:'labels'},t2,PluginsType.WIDGET)
+                     var t2=plugins.get('chartWidget',PluginsType.WIDGET);
+                    var t2inst=new Plugin({title:'Prévisions',ngModel:'',datasource:w1inst},t2,PluginsType.WIDGET)
                     $scope.page.addWidget(t2inst);
+
+
+                     var w2=plugins.get('rss', PluginsType.DATASOURCE); $log.log('plugin Rss:',w2);
+                    var w2inst=new Plugin({url:'http://www.eurosport.fr/football/rss.xml'},w2,PluginsType.DATASOURCE);
+                
+                    var t3=plugins.get('scrollableTextWidget',PluginsType.WIDGET);
+                    var t3inst=new Plugin({title:'Rss',ngModel:'',datasource:w2inst,refresh:10},t3,PluginsType.WIDGET)
+                    $scope.page.addWidget(t3inst);
+                
+
                 }
 
                 _addDashboard('jcambert');
@@ -214,8 +225,10 @@
             replace:true,
             template:'<div class="box" >\
                         <div class="box-header" ng-show="$root.settings">\
-                            <h4 ng-bind="title"></h4>\
+                           {{title}} {{lastUpdated}}\
                             <div class="box-header-btns pull-right">\
+                                <a title="settings" ng-if="!widget.isRunning" ng-click="start()"><fa icon="play" animation="tada" parent="true"></fa></a>\
+                                <a title="settings" ng-if="widget.isRunning" ng-click="stop()"><fa icon="pause" animation="tada" parent="true"></fa></a>\
                                 <a title="settings" ng-click="updateNow()"><fa icon="refresh" animation="tada" parent="true"></fa></a>\
                                 <a title="settings" ng-click="openSettings()"><fa icon="cog" animation="spin" parent="true"></fa></a>\
                                 <a title="Remove widget" ng-click="remove()"><fa icon="trash" animation="tada" parent="true"></fa></a>\
@@ -229,12 +242,28 @@
             link:function($scope,$element,attrs){
                 $scope.content=$scope.widget.initializationData;
                 $scope.title=$scope.widget.title;
+                if(angular.isDefined($scope.widget.datasource)){
+                    $scope.lastUpdated = $scope.widget.datasource.last_updated;
+
+                    $scope.$watch('widget.datasource.last_updated',function(newValue,oldValue){
+                        $scope.lastUpdated=newValue;
+                    },true);
+                }
+
+                $scope.start = function(){
+                    $scope.widget.start();
+                };
+
+                $scope.stop = function(){
+                    $scope.widget.stop();
+                };
 
                 $scope.updateNow = function(){
                     console.dir($scope.widget);
                     $scope.widget.instance.updateNow();
-                }
+                };
 
+                console.dir($scope.widget);
                 angular.element($element).find('.box-content').append($scope.content);
                 $compile($element)($scope);
             }

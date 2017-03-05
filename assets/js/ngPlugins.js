@@ -60,7 +60,8 @@
             self.type = undefined;
             self.pluginType=pluginType;
             self.id=uuid();
-
+            self.datasource=settings.datasource;
+            
             function setType(type){
                 $log.log('try to set type to:'+type);
                 if(type == undefined)return;
@@ -83,7 +84,7 @@
                                 $log.log(self.instance);
                                 $log.log('Settings:',self.settings);
                                 self.init();
-
+                                self.start();
                             },  self.startCallback,self.updateCallback,self.stopCallback ,$interval,$injector);
                         }
                     if(_.isArray(type.external_scripts) && type.external_scripts>0)
@@ -172,6 +173,8 @@
                 });
             
             };
+
+
             
             if (settings) {
                 this.setSettings(settings);
@@ -179,6 +182,7 @@
             setType(type);
         }
     Plugin.prototype = {
+        
         
         setSettings: function(settings) {
             $log.log('setSettings',this.settings,settings);

@@ -59,36 +59,42 @@
         var $compile=$injector.get('$compile');
         var $sce = $injector.get('$sce');
         var $rootScope = $injector.get('$rootScope');
-
+        var $scope;
         this.init = function(){
             $log.log('TextWidget initialization');
-            var scope=$rootScope.$new(true);
-            angular.extend(scope,settings);
+            $scope=$rootScope.$new(true);
+            angular.extend($scope,settings);
             
-            $log.log('new Widget text scope:',scope);
+            //$log.log('new Widget text scope:',$scope);
             var elt= angular.element('<widget-text></widget-text>');
-            var e=$compile(elt)(scope);
+            var e=$compile(elt)($scope);
             return e;
         }
 
         this.start=function(){
-           
+            if(angular.isDefined(settings.datasource)){
+                settings.datasource.start();
+            }
+            if (_.isFunction(startCallback))
+                startCallback();
         };
+
+        this.stop = function(){
+            if(angular.isDefined(settings.datasource)){
+                settings.datasource.stop();
+            }
+            if (_.isFunction(stopCallback))
+                stopCallback();
+        }
+
         this.updateNow = function(){
             $log.log('Text Widget UpdateNow')
             if(angular.isDefined(settings.datasource)){
                 settings.datasource.updateNow();
                 $log.log('Text Widget Datasource updated');
             }
-            //var elt=angular.element('<widget-text></widget-text>');
-           // var elt=angular.element('<div class="widget">{{title}}</div>');
-           // settings.$scope.title='TEST';
-           // elt.attr('title','WidgetTitle');
-           // elt.attr('ng-model',settings.value);
-         /*   var compiled=$compile('<div class="widget">toto</div>')(settings.$scope);
-            $log.log(compiled.html());
-            return $sce.trustAsHtml( compiled.html());
-            return settings.value;*/
+            if (_.isFunction(updateCallback))
+            updateCallback({});
         };
        
     }

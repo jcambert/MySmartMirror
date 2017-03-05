@@ -49,11 +49,12 @@
 
 	var WeatherDatasource = function(settings, startCallback, updateCallback, stopCallback, $interval,$injector) {
         var self = this;
-        self.currentSettings = settings;
+        var defaultOptions = {units:'metric',refresh:30};
+        self.currentSettings =angular.extend({},defaultOptions,settings) ;
         self.timer = null;
         var $log=$injector.get('$log');
         var $http=$injector.get('$http');
-        $log.log('Weather Datasource Settings:',settings);
+        $log.log('Forecast Datasource Settings:',settings);
         
        this.init = function(){}
 
@@ -77,23 +78,25 @@
         //@see http://jtblin.github.io/angular-chart.js/#top
         this.updateNow = function() {
             $log.log('Weather Forecast start update');
-            var url="http://api.openweathermap.org/data/2.5/forecast?APPID=" + self.currentSettings.api_key + "&q=" + encodeURIComponent(self.currentSettings.location) + "&units=" + self.currentSettings.units;
+            var url="https://openweathermap.org/data/2.5/forecast?appid=" + self.currentSettings.api_key + "&q=" + encodeURIComponent(self.currentSettings.location) + "&units=" + self.currentSettings.units;
             $http.jsonp(url)
             .then(function(result, status, headers, config){
                 var data=result.data;
                 $log.log('Forecast:',data);
-                var labels=[];
-                var datas={series:[],data:[]}
+                
+                var datas={labels:[],series:['temp','weather','rain'] ,datas:[[],[],[]]};
                 _.forEach(data.list,function(step){
-                    labels.push(moment.unix(step.dt).format('HH:mm'));
+                    datas.labels.push(moment.unix(step.dt).format('HH:mm'));
+                    datas.datas[0].push(step.main.temp);
+                    datas.datas[1].push(step.weather[0]);
+                    datas.datas[2].push(angular.isDefined(step.rain)?(angular.isDefined(step.rain['3h'])?step.rain['3h']:0):0);
                 })
                 var newData = {
                         place_name: data.city.name,
-                        labels:labels,
                         datas:datas,
                         list:data.list
                     };
-                    $log.log(newData);
+                if (_.isFunction(updateCallback))
                     updateCallback(newData);
             },function(data, status, headers, config){
                 $log.log(status);

@@ -40,7 +40,7 @@
             display_name: "Refresh Every",
             type: "integer",
             suffix: "seconds",
-            default_value: 5
+            default_value: 30
         }],
         newInstance: function(settings, newInstanceCallback, startCallback, updateCallback, stopCallback, $interval,$injector) {
             newInstanceCallback(new WeatherDatasource(settings, startCallback, updateCallback, stopCallback, $interval,$injector));
@@ -49,7 +49,8 @@
 
 	var WeatherDatasource = function(settings, startCallback, updateCallback, stopCallback, $interval,$injector) {
         var self = this;
-        self.currentSettings = settings;
+        var defaultOptions = {units:'metric',refresh:30};
+        self.currentSettings =angular.extend({},defaultOptions,settings) ;
         self.timer = null;
         var $log=$injector.get('$log');
         var $http=$injector.get('$http');
@@ -76,25 +77,26 @@
 
         this.updateNow = function() {
             $log.log('Weather start update');
-            var url="http://api.openweathermap.org/data/2.5/weather?APPID=" + self.currentSettings.api_key + "&q=" + encodeURIComponent(self.currentSettings.location) + "&units=" + self.currentSettings.units;
+            var url="https://openweathermap.org/data/2.5/weather?appid=" + self.currentSettings.api_key + "&q=" + encodeURIComponent(self.currentSettings.location) + "&units=" + self.currentSettings.units;
             $http.jsonp(url)
             .then(function(result, status, headers, config){
                 var data=result.data;
                  $log.log('Weather:',data);
+                 var unit=self.currentSettings.units=='metric'?'°C':'°F';
                 var newData = {
                         place_name: data.name,
                         sunrise: moment.unix(data.sys.sunrise).format("HH:mm:ss"),
                         sunset: moment.unix(data.sys.sunset ).format("HH:mm:ss"),
                         conditions: toTitleCase(data.weather[0].description),
-                        current_temp: data.main.temp,
-                        high_temp: data.main.temp_max,
-                        low_temp: data.main.temp_min,
-                        pressure: data.main.pressure,
-                        humidity: data.main.humidity,
+                        current_temp: data.main.temp+unit,
+                        high_temp: data.main.temp_max+unit,
+                        low_temp: data.main.temp_min+unit,
+                        pressure: data.main.pressure+'Pa',
+                        humidity: data.main.humidity+'%',
                         wind_speed: data.wind.speed,
                         wind_direction: data.wind.deg
                     };
-                    //$log.log(newData);
+                if (_.isFunction(updateCallback))
                     updateCallback(newData);
             },function(data, status, headers, config){
                 $log.log(status);

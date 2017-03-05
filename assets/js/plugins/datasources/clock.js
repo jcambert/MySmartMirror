@@ -15,15 +15,12 @@
         stop: function() {
             if (angular.isDefined(this._timer)) {
                 this.$interval.cancel(this._timer);
+                this._timer=null;
             }
         }
     };
 
 	var pluginTimer = angular.module('ngPlugins');	
-
-/*	pluginTimer.config(['pluginsProvider','PluginsType', function(plugins,PluginsType){
-		plugins.add(clock, PluginsType.DATASOURCE);
-	}]);*/
 
 
 	pluginTimer.run(['$log','plugins','PluginsType',function($log,plugins,PluginsType){
@@ -51,7 +48,8 @@
 
 	var ClockDatasource = function(settings, startCallback, updateCallback, stopCallback, $interval,$injector) {
         var self = this;
-        var currentSettings = settings;
+        var defaultOptions = {refresh:10};
+        self.currentSettings =angular.extend({},defaultOptions,settings) ;
         self.timer = null;
         var $log=$injector.get('$log');
         $log.log('Clock Datasource Settings:',settings);
@@ -64,7 +62,7 @@
         this.start = function() {
             self.stop();
             //timer =  setInterval(self.updateNow, currentSettings.refresh * 1000);
-            self.timer.start(currentSettings.refresh * 1000, self.updateNow);
+            self.timer.start(self.currentSettings.refresh * 1000, self.updateNow);
             if (_.isFunction(startCallback))
                 startCallback();
         }
@@ -79,8 +77,8 @@
                 time_string_value: date.toLocaleTimeString(),
                 date_object: date
             };
-
-            updateCallback(data);
+            if (_.isFunction(updateCallback))
+                updateCallback(data);
         }
 
         this.onDispose = function() {
@@ -88,7 +86,7 @@
         }
 
         this.onSettingsChanged = function(newSettings) {
-            currentSettings = newSettings;
+            self.currentSettings = newSettings;
             self.start();
         }
         self.timer = new Timer($interval);
